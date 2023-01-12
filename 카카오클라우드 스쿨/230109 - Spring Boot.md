@@ -1,4 +1,4 @@
-# 카카오 클라우드 스쿨 20230105 - Spring Boot
+# 카카오 클라우드 스쿨 20230109 - Spring Boot
 
 ## Spring Boot
 
