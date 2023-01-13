@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+  <th:block th:fragment="content">
+    <h1 class="mt-4">
+      게시물 상세보기
+    </h1>
+
+    <div class="form-group">
+      <lable>글번호</lable>
+      <input type="text" class="form-control" name="bno"
+             th:value="${dto.bno}" readonly="readonly"/>
+    </div>
+
+    <div class="form-group">
+      <lable>제목</lable>
+      <input type="text" class="form-control" name="title"
+             th:value="${dto.title}" readonly="readonly"/>
+    </div>
+
+    <div class="form-group">
+      <lable>내용</lable>
+      <textarea class="form-control" row="5" name="content"
+                readonly="readonly">[[${dto.content}]]</textarea>
+    </div>
+
+    <div class="form-group">
+      <lable>작성자</lable>
+      <input type="text" class="form-control" name="name"
+             th:value="${dto.writerName}" readonly="readonly"/>
+    </div>
+
+    <div class="form-group">
+      <lable>작성일</lable>
+      <input type="text" class="form-control" name="regDate"
+             th:value="${#temporals.format(dto.regDate, 'yyyy/MM/dd')}"
+             readonly="readonly"/>
+    </div>
+
+    <div class="form-group">
+      <lable>수정일</lable>
+      <input type="text" class="form-control" name="modDate"
+             th:value="${#temporals.format(dto.modDate, 'yyyy/MM/dd')}"
+             readonly="readonly"/>
+    </div>
+
+    <a th:href="@{/board/list(page=${requestDTO.page})}">
+        <button type="button" class="btn btn-info">목록</button>
+    </a>
+
+    <a th:href="@{/board/modify(
+    bno=${dto.bno},
+    page=${requestDTO.page})}">
+      <button type="button" class="btn btn-primary">수정</button>
+    </a>
+
+  </th:block>
+</th:block>
