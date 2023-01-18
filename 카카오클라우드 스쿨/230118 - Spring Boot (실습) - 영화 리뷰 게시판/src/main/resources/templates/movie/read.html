@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+  <th:block th:fragment="content">
+    <h1 class="mt-4">영화 정보</h1>
+    <div class="form-group">
+      <label>제목</label>
+      <input type="text" class="form-control"
+             name="title" th:value="${dto.title}"
+             readonly="readonly" />
+    </div>
+    <div class="form-group">
+      <label>리뷰 개수</label>
+      <input type="text" class="form-control"
+             name="title" th:value="${dto.reviewCnt}"
+             readonly="readonly" />
+    </div>
+    <div class="form-group">
+      <label>평점</label>
+      <input type="text" class="form-control"
+             name="title" th:value="${dto.avg}"
+             readonly="readonly" />
+    </div>
+
+    <div class="uploadResult">
+      <ul>
+        <li th:each="movieImage:${dto.imageDTOList}">
+          <img th:if="${movieImage.path != null}"
+               th:src="|/display?filename=${movieImage.getThumbnailURL()}|">
+
+        </li>
+      </ul>
+    </div>
+
+    <button type="button" class="btn btn-info addReviewBtn">
+      리뷰 작성
+    </button>
+    <div class="list-group reviewList"></div>
+
+    <div class="reviewModal modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">영화 리뷰</h5>
+            <button type="button" class="close"
+                    data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label>작성자</label>
+              <input type="text" class="form-control" name="mid">
+            </div>
+            <div class="form-group">
+              <label>평점<span class="grade"></span></label>
+              <div class="starrr"></div>
+            </div>
+            <div class="form-group">
+              <label>리뷰</label>
+              <input type="text" class="form-control"
+                     name="text" placeholder="영화에 대한 감상">
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary closeBtn"
+                    data-dismiss="modal">닫기</button>
+            <button type="button" class="btn btn-primary reviewSaveBtn"
+                    data-dismiss="modal">저장</button>
+            <button type="button" class="btn btn-warning modifyBtn"
+                    data-dismiss="modal">수정</button>
+            <button type="button" class="btn btn-danger removeBtn"
+                    data-dismiss="modal">삭제</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <!--원본 이미지 출력을 위한 모달 창 -->
+    <div class="imageModal modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">이미지</h5>
+            <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary closeImage"
+                    data-dismiss="modal">닫기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <style>
+      .uploadResult {
+        width:100%;
+        background-color:gray;
+        margin-top:10px;
+      }
+
+      .uploadResult ul{
+        display: flex;
+        flex-flow: row;
+        justify-content: center;
+        align-items: center;
+        vertical-align: top;
+      }
+
+      .uploadResult ul li{
+        list-style: none;
+        padding: 10px;
+        margin-left: 2em;
+      }
+
+      .uploadResult ul li img{
+        width:100px;
+      }
+    </style>
+    <script th:src="@{/js/starrr.js}"></script>
+    <link th:href="@{/css/starrr.css}" rel="stylesheet"/>
+    <link rel="stylesheet"
+          href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.min.css" />
+
+    <script>
+      $(document).ready(function(e){
+        let grade = 0;
+        let mno = [[${dto.mno}]];
+        $('.starrr').starrr({
+          rating: grade,
+          change:function(e, value){
+            if(value){
+              console.log(value);
+              grade = value;
+              console.log(grade);
+            }
+          }
+        })
+
+        let reviewModal = $(".reviewModal");
+        let inputMid = $("input[name='mid']");
+        let inputText = $("input[name='text']");
+
+        $('.closeBtn').click(function(){
+          reviewModal.modal('hide');
+        });
+
+        $('.addReviewBtn').click(function(){
+          inputMid.val('');
+          inputText.val('');
+          $('.removeBtn, .modifyBtn').hide();
+          $('.reviewSaveBtn').show();
+          reviewModal.modal('show');
+        });
+
+        $('.reviewSaveBtn').click(function() {
+          let data = {
+            mno: mno,
+            grade: grade,
+            text: inputText.val(),
+            mid: inputMid.val()
+          };
+          console.log(data);
+          $.ajax({
+            url: '/reviews/' + mno,
+            type: "POST",
+            data: JSON.stringify(data),
+            contentType:'application/json; charset=utf-8',
+            dataType: "text",
+            success: function (result) {
+              self.location.reload();
+            }
+          })
+          reviewModal.modal('hide');
+        });
+
+      //리뷰를 출력하는 함수
+      let getMovieReviews=()=> {
+        let formatTime = (str) => {
+          let date = new Date(str);
+          return date.getFullYear() + '/'
+                  + (date.getMonth() + 1) + '/'
+                  + date.getDate() + ''
+                  + date.getHours() + ':'
+                  + date.getMinutes();
+        }
+
+        $.getJSON("/reviews/" + mno + "/list", function (ar) {
+          ar.sort((o1, o2) => {
+            if (formatTime(o1.modDate) < formatTime(o2.modDate)) return 1;
+            if (formatTime(o1.modDate) === formatTime(o2.modDate)) return 0;
+            if (formatTime(o1.modDate) > formatTime(o2.modDate)) return -1;
+          })
+          console.log(ar);
+
+        })
+      }
+      getMovieReviews();
+      })
+    </script>
+  </th:block>
+</th:block>

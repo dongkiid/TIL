@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
+  <th:block th:fragment="content">
+    <h1 class="mt-4">영화 등록</h1>
+    <form th:action="@{/movie/register}" th:method="post">
+      <div class="form-group">
+        <label>영화 제목</label>
+        <input type="text" class="form-control" name="title"
+               placeholder="영화 제목을 입력하세요" />
+      </div>
+
+      <div class="form-group fileForm">
+        <label>영화 포스터 목록</label>
+        <input type="file" class="custom-file-input files"
+               id="fileInput" multiple="multiple"/>
+        <label class="custom-file-label" data-browse="Browse"></label>
+      </div>
+      <button type="submit" class="btn btn-primary">등록</button>
+    </form>
+
+    <div class="uploadResult"><ul></ul></div>
+    <style>
+      .uploadResult {
+        width:100%;
+        background-color:gray;
+        margin-top:10px;
+      }
+
+      .uploadResult ul{
+        display: flex;
+        flex-flow: row;
+        justify-content: center;
+        align-items: center;
+        vertical-align: top;
+      }
+
+      .uploadResult ul li{
+        list-style: none;
+        padding: 10px;
+        margin-left: 2em;
+      }
+
+      .uploadResult ul li img{
+        width:100px;
+      }
+    </style>
+
+  <script>
+    //이미지 업로드 결과를 받아서 출력해주는 함수
+    let showResult = (uploadResultArr) => {
+      //출력할 영역
+      let uploadUL = $(".uploadResult ul");
+      //출력할 내용
+      let str = "";
+      //배열 반복
+      $(uploadResultArr).each(function(i, obj){
+        str += "<li data-name=\'" + obj.fileName +
+                "' data-path='" + obj.uploadPath +
+                "' data-uuid='" + obj.uuid + "'>";
+        str += " <div>";
+        str += "<button type='button' data-file=\'" +
+                obj.imageURL + "\' ";
+        str += " class='btn-warning btn-sm'>X</button><br>";
+        str += "<img src='/display?filename=" +
+                obj.thumbnailURL + "'>";
+        str += "</div></li>"
+      });
+      uploadUL.append(str);
+    }
+
+    $(document).ready(function(e){
+      //제외할 확장자를 위한 정규식
+      //. 다음에 exe, sh, zip, alz, tiff로 끝나는 정규식
+      let regex = new RegExp("(.*?)\.(exe|sh|zip|alz|tiff)$");
+      //파일의 최대 사이즈
+      let maxSize = 1024 * 1024 * 10;
+
+      //파일의 확장자를 조사해주는 함수
+      function checkExtension(fileName, fileSize){
+        if(fileSize >= maxSize){
+          alert("파일 사이즈 초과");
+          return false;
+        }
+        if(regex.test(fileName)){
+          alert("해당 종류의 파일은 업로드 할 수 없습니다.");
+          return false;
+        }
+        return true;
+      }
+
+      $(".custom-file-input").on("change", function() {
+        let fileName = $(this).val().split("\\").pop();
+        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        let formData = new FormData();
+        inputFile = $(this);
+        files = inputFile[0].files;
+        appended = false;
+
+        for (let i = 0; i < files.length; i++) {
+          if(!checkExtension(files[i].name, files[i].size) ){
+            return false;
+          }
+          console.log(files[i]);
+          formData.append("uploadFiles", files[i]);
+          appended = true;
+        }
+
+        //upload를 하지 않는다.
+        if (!appended) {
+          return;
+        }
+        for (let value of formData.values()) {
+          console.log(value);
+        }
+        //실제 업로드 부분
+        //upload ajax
+        $.ajax({
+          url: '/uploadajax',
+          processData: false,
+          contentType: false,
+          data: formData,
+          type: 'POST',
+          dataType:'json',
+          success: function(result){
+            console.log(result);
+            showResult(result);
+          },
+          error: function(jqXHR, textstatus, errorThrown){
+            console.log(textStatus);
+          }
+        }); //$.ajax
+      }); //end change event
+
+      //이미지 위의 삭제 버튼을 눌렀을 때 처리
+      $('.uploadResult').on('click', 'li button', function(){
+        //data-file의 값 가져오기
+        let targetFile = $(this).data("file");
+        //자신을 포함하고 있는 li
+        let targetLi = $(this).closest("li");
+        $.ajax({
+          url:'/removefile',
+          data:{fileName:targetFile},
+          dataType:'text',
+          type:'POST',
+          success:function(result){
+            alert(result);
+            targetLi.remove();
+          }
+        })
+      })
+
+      //등록 버튼을 누를 때 이벤트 처리
+      $('.btn-primary').click(function(e){
+        //기본 기능 제거
+        e.preventDefault();
+        let str = "";
+        if($(".uploadResult li").length > 3){
+          alert("이미지는 3개까지만 등록해야 합니다.");
+          return;
+        }
+
+        $(".uploadResult li").each(function(i, obj){
+          let target = $(obj);
+          let imsi = 'imageDTOList[' + i + '].imgName';
+          str += "<input type='hidden' " + "name=\'"
+            + imsi + "\' " + " value=\'"
+            + target.data('name') + "\'>";
+          imsi = 'imageDTOList[' + i + '].path';
+          str += "<input type='hidden' " +  "name=\'"
+            + imsi + "\'" + " value=\'"
+            + target.data('path') + "\'>";
+          imsi = 'imageDTOList[' + i + '].uuid';
+          str += "<input type='hidden' " +  "name=\'"
+                  + imsi + "\'" + " value=\'"
+                  + target.data('uuid') + "\'>";
+        })
+        alert(str);
+        $('form').append(str).submit();
+      })
+
+    })
+  </script>
+  </th:block>
+</th:block>
