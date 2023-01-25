@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>로그인</title>
+</head>
+<body>
+<th:block th:if="${param.logout != null}">
+  <h2>로그인</h2>
+</th:block>
+<form method="post">
+  <div>
+    <input type="text" name="username" />
+    <lable>admin</lable>
+  </div>
+  <div>
+    <input type="password" name="password" />
+    <lable>admin</lable>
+  </div>
+  <div>
+    <input type="checkbox" name="remember-me" />
+    <label>자동 로그인</label>
+  </div>
+  <div>
+    <input type="submit" value="전송"/>
+  </div>
+  <div>
+    <a href="/oauth2/authorization/kakao">카카오 로그인</a>
+  </div>
+</form>
+</body>
+</html>

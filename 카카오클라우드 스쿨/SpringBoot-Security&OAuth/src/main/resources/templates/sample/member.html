@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div sec:authorize="hasRole('USER')">유저 권한</div>
+<div sec:authorize="hasRole('ADMIN')">관리자 권한</div>
+<div sec:authorize="isAuthenticated()">로그인 된 경우만 출력</div>
+사용자 이름<div sec:authentication="name"></div>
+</body>
+<script th:inline="javascript">
+    const auth =  [[${#authentication.principal}]];
+    console.log(auth);
+</script>
+</html>
